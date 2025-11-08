@@ -35,4 +35,8 @@ public class DaoTarefa {
     public ArrayList<Tarefa> getTarefas(){
         return this.listaTarefas;
     }
+
+    public void removerTarefa(Tarefa tarefa){
+        listaTarefas.remove(tarefa);
+    }
 }

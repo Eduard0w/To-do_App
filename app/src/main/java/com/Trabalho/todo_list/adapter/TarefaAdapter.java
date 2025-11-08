@@ -2,6 +2,7 @@ package com.Trabalho.todo_list.adapter;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,14 +15,23 @@ import com.Trabalho.todo_list.model.Tarefa;
 
 import java.util.ArrayList;
 
-//Essa classe é a ponte entre os dados/BD(tarefa, DAO) e a interface, a parte visual do app.
 public class TarefaAdapter extends RecyclerView.Adapter<TarefaAdapter.TarefaViewHolder> {
 
-    public ArrayList<Tarefa> tarefas;
+    private final ArrayList<Tarefa> tarefas;
 
-    public TarefaAdapter(){
+    private Listener listener;
+    public TarefaAdapter() {
         tarefas = DaoTarefa.getInstance().getTarefas();
     }
+
+    public interface Listener{
+        void onClick(int position);
+    }
+
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
+
 
     @NonNull
     @Override
@@ -35,8 +45,40 @@ public class TarefaAdapter extends RecyclerView.Adapter<TarefaAdapter.TarefaView
     public void onBindViewHolder(@NonNull TarefaViewHolder holder, int position) {
         CardView card = holder.cardView;
         TextView tarefaNome = card.findViewById(R.id.textoTarefa);
+        RadioButton radioButton = card.findViewById(R.id.radioButton);
 
-        tarefaNome.setText(tarefas.get(position).getTarefa());
+        Tarefa tarefa = tarefas.get(position);
+
+        tarefaNome.setText(tarefa.getTarefa());
+
+        // Evita que o listener antigo dispare durante a atualização do estado
+        radioButton.setOnCheckedChangeListener(null);
+        radioButton.setChecked(tarefa.isConcluida());
+
+        radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked){
+                int posAtual = holder.getAbsoluteAdapterPosition();
+                if(posAtual != RecyclerView.NO_POSITION){
+                    listener.onClick(posAtual);
+                }
+            }
+//            if (isChecked) {
+//                tarefa.setConcluida(true);
+//
+//                int adapterPosition = holder.getBindingAdapterPosition();
+//                if (adapterPosition != RecyclerView.NO_POSITION &&
+//                        adapterPosition >= 0 &&
+//                        adapterPosition < tarefas.size()) {
+//
+//                    // Remove com segurança do DAO e da lista local
+//                    DaoTarefa.getInstance().removerTarefa(tarefa);
+//                    tarefas.remove(adapterPosition);
+//
+//                    // Atualiza o RecyclerView de forma segura
+//                    notifyItemRemoved(adapterPosition);
+//                }
+//            }
+        });
     }
 
     @Override
@@ -45,10 +87,11 @@ public class TarefaAdapter extends RecyclerView.Adapter<TarefaAdapter.TarefaView
     }
 
     public static class TarefaViewHolder extends RecyclerView.ViewHolder {
-        private CardView cardView;
+        private final CardView cardView;
+
         public TarefaViewHolder(@NonNull CardView view) {
             super(view);
-            cardView = view;
+            this.cardView = view;
         }
     }
 }
